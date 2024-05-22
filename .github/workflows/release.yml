@@ -1,0 +1,114 @@
+name: Build and Release Executables
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pandas
+
+      - name: Build executable
+        run: |
+          pyinstaller --onefile xlsx_parse.py
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: xlsx_parse_macos
+          path: dist/xlsx_parse
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pandas
+
+      - name: Build executable
+        run: |
+          pyinstaller --onefile xlsx_parse.py
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: xlsx_parse_linux
+          path: dist/xlsx_parse
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pandas
+
+      - name: Build executable
+        run: |
+          pyinstaller --onefile xlsx_parse.py
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: xlsx_parse_windows
+          path: dist/xlsx_parse.exe
+
+  release:
+    needs: [build-macos, build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: xlsx_parse_macos
+          path: ./dist
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: xlsx_parse_linux
+          path: ./dist
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: xlsx_parse_windows
+          path: ./dist
+
+      - name: Upload release assets
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "dist/*"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+
